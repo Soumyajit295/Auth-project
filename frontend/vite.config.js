@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server : {
     proxy : {
-      '/api' : 'https://auth-project-backend-vf2a.onrender.com'
+      '/api' : import.meta.env.VITE_API_URL
     }
   }
 })
