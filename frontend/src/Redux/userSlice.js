@@ -3,10 +3,11 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const initialState = {
-    loggedInUserData: JSON.parse(localStorage.getItem('loggedInUserData')) || [],
+    loggedInUserData: JSON.parse(localStorage.getItem('loggedInUserData')) || {},
     userLoggedIn: localStorage.getItem('userLoggedIn') === 'true',
     role: '',
     loading: false,
+    success: null,
     error: null
 };
 
@@ -50,6 +51,7 @@ export const getProfile = createAsyncThunk('/user/profile', async (_, { rejectWi
         const response = await axios.get(`${url}/api/v1/users/profile`, { withCredentials: true });
         return response.data;
     } catch (err) {
+        toast.error(err?.response?.data?.message || err.message);
         return rejectWithValue(err.message);
     }
 });
@@ -62,6 +64,8 @@ const userSlice = createSlice({
         builder
             .addCase(register.pending, (state) => {
                 state.loading = true;
+                state.success = null;
+                state.error = null;
             })
             .addCase(register.fulfilled, (state, action) => {
                 localStorage.setItem('loggedInUserData', JSON.stringify(action.payload.data));
@@ -69,6 +73,7 @@ const userSlice = createSlice({
                 state.loggedInUserData = action.payload.data;
                 state.userLoggedIn = true;
                 state.loading = false;
+                state.success = action.payload.message;
             })
             .addCase(register.rejected, (state, action) => {
                 state.error = action.payload;
@@ -76,6 +81,8 @@ const userSlice = createSlice({
             })
             .addCase(login.pending, (state) => {
                 state.loading = true;
+                state.success = null;
+                state.error = null;
             })
             .addCase(login.fulfilled, (state, action) => {
                 localStorage.setItem('loggedInUserData', JSON.stringify(action.payload.data));
@@ -83,19 +90,42 @@ const userSlice = createSlice({
                 state.loggedInUserData = action.payload.data;
                 state.userLoggedIn = true;
                 state.loading = false;
+                state.success = action.payload.message;
             })
             .addCase(login.rejected, (state, action) => {
                 state.error = action.payload;
                 state.loading = false;
             })
+            .addCase(logout.pending, (state) => {
+                state.loading = true;
+                state.success = null;
+                state.error = null;
+            })
             .addCase(logout.fulfilled, (state) => {
                 localStorage.clear();
-                state.loggedInUserData = [];
+                state.loggedInUserData = {};
                 state.userLoggedIn = false;
+                state.loading = false;
+                state.success = "Logged out successfully";
+            })
+            .addCase(logout.rejected, (state, action) => {
+                state.error = action.payload;
+                state.loading = false;
+            })
+            .addCase(getProfile.pending, (state) => {
+                state.loading = true;
+                state.success = null;
+                state.error = null;
             })
             .addCase(getProfile.fulfilled, (state, action) => {
                 localStorage.setItem('loggedInUserData', JSON.stringify(action.payload.data));
                 state.loggedInUserData = action.payload.data;
+                state.loading = false;
+                state.success = "Profile loaded successfully";
+            })
+            .addCase(getProfile.rejected, (state, action) => {
+                state.error = action.payload;
+                state.loading = false;
             });
     }
 });
